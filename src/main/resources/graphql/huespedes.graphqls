@@ -1,0 +1,47 @@
+extend type Query {
+    huespedes: [HuespedResponse!]!
+    huespedesPaginados(page: Int! = 0, size: Int! = 20): HuespedPage!
+    huesped(id: ID!): HuespedResponse
+    huespedPorDocumento(numeroDocumento: String!): HuespedResponse
+}
+
+type HuespedPage {
+    items: [HuespedResponse!]!
+    totalItems: Int!
+    totalPages: Int!
+    currentPage: Int!
+}
+
+extend type Mutation {
+    crearHuesped(input: HuespedInput!): HuespedResponse!
+    editarHuesped(id: ID!, input: HuespedInput!): HuespedResponse!
+    eliminarHuesped(id: ID!): Boolean!
+}
+
+enum TipoDoc {
+    DNI
+    PASAPORTE
+    CE
+    RUC
+}
+
+input HuespedInput {
+    nombre: String!
+    apellido: String!
+    tipoDocumento: TipoDoc!
+    numeroDocumento: String!
+    email: String
+    telefono: String
+    nacionalidad: String!
+}
+
+type HuespedResponse {
+    id: ID!
+    nombre: String!
+    apellido: String!
+    tipoDocumento: TipoDoc!
+    numeroDocumento: String!
+    email: String
+    telefono: String
+    nacionalidad: String!
+}

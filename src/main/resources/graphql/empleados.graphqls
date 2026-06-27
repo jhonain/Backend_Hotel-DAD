@@ -1,0 +1,66 @@
+extend type Query {
+    empleados: [Empleado!]!
+    empleado(id: ID!): Empleado
+    empleadosPorCargo(cargo: Cargo!): [Empleado!]!
+    empleadosPorTurno(turno: TurnoEmpleado!): [Empleado!]!
+    empleadosActivos: [Empleado!]!
+    empleadosConPagoPendiente: [Empleado!]!
+}
+
+extend type Mutation {
+    crearEmpleado(input: EmpleadoInput!): Empleado!
+    editarEmpleado(id: ID!, input: EmpleadoInput!): Empleado!
+    eliminarEmpleado(id: ID!): Boolean!
+    cambiarEstadoEmpleado(id: ID!, activo: Boolean!): Empleado!
+    asignarUsuarioAEmpleado(empleadoId: ID!, usuarioId: ID!): Empleado!
+}
+
+enum Cargo {
+    SUPERADMIN
+    RECEPCIONISTA
+    ADMINISTRADOR
+    AUDITOR
+    CAJERO
+}
+
+enum TurnoEmpleado {
+    DIA
+    NOCHE
+}
+
+input EmpleadoInput {
+    nombre: String!
+    apellido: String!
+    cargo: Cargo!
+    telefono: String!
+    turno: TurnoEmpleado!
+    salario: Float!
+    fechaContratacion: String
+}
+
+type Empleado {
+    id: ID!
+    nombre: String!
+    apellido: String!
+    cargo: Cargo!
+    telefono: String!
+    turno: TurnoEmpleado!
+    activo: Boolean!
+    fechaContratacion: String
+    salario: Float!
+
+    # Cálculos de pago
+    proximoPago: String
+    diasParaPago: Int
+    estadoPago: String
+    pagoPendiente: Boolean
+    salarioPendiente: Float
+
+    usuario: UsuarioInfo
+}
+
+type UsuarioInfo {
+    id: ID!
+    username: String!
+    email: String
+}

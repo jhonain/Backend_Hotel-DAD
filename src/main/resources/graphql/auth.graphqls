@@ -1,0 +1,34 @@
+extend type Query {
+    me: Usuario
+}
+
+extend  type Mutation {
+    login(loginRequest: LoginRequest!): LoginResponse!
+    register(registerRequest: RegisterRequest!): LoginResponse!
+    logout(token: String!):Boolean!
+}
+
+input LoginRequest {
+    username: String!
+    password: String!
+}
+
+input RegisterRequest {
+    username: String!
+    password: String!
+    email: String
+}
+
+type Usuario {
+    id: ID!
+    username: String!
+    email: String
+    enabled: Boolean!
+    createdAt: String
+}
+
+type LoginResponse {
+    token: String!
+    username: String!
+    email: String
+}

@@ -1,0 +1,61 @@
+extend type Query {
+    habitaciones: [HabitacionResponse!]!
+    habitacion(id: ID!): HabitacionResponse
+    habitacionesPaginadas(page: Int!=0, size: Int!=20 ):HabitacionPage!
+    habitacionPorNumero(numero: String!): HabitacionResponse
+    habitacionesDisponibles: [HabitacionResponse!]!
+    habitacionesPorTipo(tipo: String!): [HabitacionResponse!]!
+    filtrarHabitaciones(
+        estado: EstadoHabitacion
+        tipo: String
+        piso: Int
+        capacidad: Int
+        precioMin: Float
+        precioMax: Float
+    ): [HabitacionResponse!]!
+}
+
+extend type Mutation {
+    crearHabitacion(input: HabitacionInput!): HabitacionResponse!
+    editarHabitacion(id: ID!, input: HabitacionInput!): HabitacionResponse!
+    cambiarEstadoHabitacion(id: ID!, estado: EstadoHabitacion!): HabitacionResponse!
+    eliminarHabitacion(id: ID!): Boolean!
+}
+
+type HabitacionPage{
+    items: [HabitacionResponse!]!
+    totalItems: Int!
+    totalPages: Int!
+    currentPage: Int!
+}
+
+enum EstadoHabitacion {
+    DISPONIBLE
+    OCUPADA
+    EN_LIMPIEZA
+    MANTENIMIENTO
+    BLOQUEADA
+}
+
+input HabitacionInput {
+    numero: String!
+    piso: Int!
+    tipo: String!
+    capacidad: Int!
+    precio: Float!
+    estado: EstadoHabitacion
+    descripcion: String
+    imagenUrl: String
+}
+
+type HabitacionResponse {
+    id: ID!
+    numero: String!
+    piso: Int!
+    tipo: String!
+    capacidad: Int!
+    precio: Float!
+    estado: EstadoHabitacion!
+    descripcion: String
+    imagenUrl: String
+}

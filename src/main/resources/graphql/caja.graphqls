@@ -1,0 +1,65 @@
+extend type Query {
+    cajas: [CajaResponse!]!
+    caja(id: ID!): CajaResponse
+    cajaAbierta(empleadoId: ID!): CajaResponse
+    cajasPorEmpleado(empleadoId: ID!): [CajaResponse!]!
+    cajasPorFecha(inicio: String!, fin: String!): [CajaResponse!]!
+    movimientosDeCaja(cajaId: ID!): [MovimientoResponse!]!
+    resumenCaja(inicio: String!, fin: String!): ResumenCaja!
+}
+
+extend type Mutation {
+    abrirCaja(empleadoId: ID!, montoInicial: Float!): CajaResponse!
+    cerrarCaja(id: ID!, montoFinal: Float!): CajaResponse!
+    registrarEgreso(input: EgresoInput!): MovimientoResponse!
+}
+
+enum EstadoCaja {
+    ABIERTA
+    CERRADA
+}
+
+enum Turno {
+    DIA
+    NOCHE
+}
+
+input EgresoInput {
+    cajaId: ID!
+    monto: Float!
+    concepto: String!
+}
+
+type CajaResponse {
+    id: ID!
+    codigo: String!
+    empleadoId: ID!
+    empleadoNombre: String!
+    fechaApertura: String!
+    fechaCierre: String
+    montoInicial: Float!
+    montoFinal: Float
+    totalIngresos: Float!
+    totalEgresos: Float!
+    estado: EstadoCaja!
+    turno: Turno!
+}
+
+type MovimientoResponse {
+    id: ID!
+    cajaId: ID!
+    reservaId: ID
+    tipo: String!
+    monto: Float!
+    concepto: String!
+    fecha: String!
+}
+
+type ResumenCaja {
+    totalCajas: Int!
+    cajasAbiertas: Int!
+    totalIngresos: Float!
+    totalEgresos: Float!
+    saldoTotal: Float!
+    cajas: [CajaResponse!]!
+}

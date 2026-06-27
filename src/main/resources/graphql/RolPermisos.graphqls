@@ -1,0 +1,53 @@
+
+# ========== TYPES (modelos de salida) ==========
+type Rol {
+    id: ID!
+    nombre: String!
+    descripcion: String
+    permisos: [Permiso!]!
+}
+
+type Permiso {
+    id: ID!
+    codigo: String!
+    descripcion: String
+    modulo: String!
+}
+
+# ========== INPUTS (modelos de entrada) ==========
+input RolRequest {
+    nombre: String!
+    descripcion: String
+}
+
+input PermisoRequest {
+    codigo: String!
+    descripcion: String
+    modulo: String!
+}
+
+# ========== QUERIES (leer datos) ==========
+extend type Query {
+    # Roles
+    roles: [Rol!]!
+    rol(id: ID!): Rol
+
+    # Permisos
+    permisos: [Permiso!]!
+    permiso(id: ID!): Permiso
+}
+
+# ========== MUTATIONS (escribir datos) ==========
+extend type Mutation {
+    # Roles
+    crearRol(nombre: String!, descripcion: String): Rol!
+    editarRol(id: ID!, nombre: String, descripcion: String): Rol!
+    eliminarRol(id: ID!): Boolean!
+    asignarPermisosARol(rolId: ID!, permisosIds: [ID!]!): Rol!
+    revocarPermisoDeRol(rolId: ID!, permisoId: ID!): Rol!
+
+    # Permisos
+    crearPermiso(codigo: String!, descripcion: String, modulo: String!): Permiso!
+    editarPermiso(id: ID!, codigo: String!, descripcion: String, modulo: String!): Permiso!
+    eliminarPermiso(id: ID!): Boolean!
+}

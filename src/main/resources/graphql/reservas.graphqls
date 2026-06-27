@@ -1,0 +1,68 @@
+extend type Query {
+    reservas: [ReservaResponse!]!
+    reservasPaginadas(page: Int! = 0, size: Int! = 20): ReservaPage!
+    reserva(id: ID!): ReservaResponse
+    reservasPorHuesped(huespedId: ID!): [ReservaResponse!]!
+    reservasPorHabitacion(habitacionId: ID!): [ReservaResponse!]!
+    reservasPorEstado(estado: String!): [ReservaResponse!]!
+    reservasPorEmpleado(empleadoId: ID!): [ReservaResponse!]!
+    reservasPorEmpleadoYFecha(empleadoId: ID!, inicio: String!, fin: String!): [ReservaResponse!]!
+    conteoReservasPorEmpleadoYFecha(empleadoId: ID!, inicio: String!, fin: String!): Int!
+}
+
+extend type Mutation {
+    crearReserva(input: ReservaInput!): ReservaResponse!
+    editarReserva(id: ID!, input: ReservaInput!): ReservaResponse!
+    checkinReserva(id: ID!, metodoPago: MetodoPago!): ReservaResponse!
+    checkoutReserva(id: ID!): ReservaResponse!
+    cancelarReserva(id: ID!): ReservaResponse!
+    eliminarReserva(id: ID!): Boolean!
+}
+
+enum EstadoReserva {
+    PENDIENTE
+    ACTIVA
+    COMPLETADA
+    CANCELADA
+}
+
+enum MetodoPago {
+    EFECTIVO
+    TARJETA
+    TRANSFERENCIA
+    YAPE
+    PLIN
+}
+
+input ReservaInput {
+    huespedId: ID!
+    habitacionId: ID!
+    empleadoId: ID!
+    checkIn: String!
+    checkOut: String!
+    numeroPersonas: Int!
+}
+
+type ReservaResponse {
+    id: ID!
+    huespedId: ID!
+    huespedNombre: String!
+    habitacionId: ID!
+    habitacionNumero: String!
+    empleadoId: ID!
+    empleadoNombre: String!
+    checkIn: String!
+    checkOut: String!
+    numeroPersonas: Int!
+    fechaCheckIn: String
+    totalPagar: Float
+    metodoPago: MetodoPago
+    estado: EstadoReserva!
+}
+
+type ReservaPage {
+    items: [ReservaResponse!]!
+    totalItems: Int!
+    totalPages: Int!
+    currentPage: Int!
+}
