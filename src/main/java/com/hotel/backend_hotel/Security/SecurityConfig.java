@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .cors(org.springframework.security.config.Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/graphql", "/graphiql/**").permitAll()
+                        .requestMatchers("/graphql", "/graphiql/**", "/api/upload/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

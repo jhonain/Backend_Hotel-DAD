@@ -1,0 +1,113 @@
+extend type Query {
+    emisorActivo: EmisorResponse!
+    emisor(id: ID!): EmisorResponse
+    series: [SerieResponse!]!
+    factura(id: ID!): FacturaResponse
+    facturaPorNumero(serie: String!, correlativo: Int!): FacturaResponse
+    facturasPorReserva(reservaId: ID!): [FacturaResponse!]!
+    facturasPorHuesped(huespedId: ID!): [FacturaResponse!]!
+    facturasPaginadas(page: Int! = 0, size: Int! = 20): FacturaPage!
+}
+
+extend type Mutation {
+    crearEmisor(input: EmisorInput!): EmisorResponse!
+    editarEmisor(id: ID!, input: EmisorInput!): EmisorResponse!
+    crearSerie(input: SerieInput!): SerieResponse!
+    generarFactura(input: FacturaInput!): FacturaResponse!
+}
+
+enum TipoComprobante {
+    FACTURA
+    BOLETA
+}
+
+enum EstadoFacturaEnum {
+    BORRADOR
+    ACEPTADO
+    RECHAZADO
+    ANULADO
+}
+
+input EmisorInput {
+    ruc: String!
+    razonSocial: String!
+    nombreComercial: String
+    direccion: String
+    ubigeo: String
+    departamento: String
+    provincia: String
+    distrito: String
+    usuarioSol: String
+    claveSol: String
+    porcentajeIgv: Float
+}
+
+type EmisorResponse {
+    id: ID!
+    ruc: String!
+    razonSocial: String!
+    nombreComercial: String
+    direccion: String
+    ubigeo: String
+    departamento: String
+    provincia: String
+    distrito: String
+    porcentajeIgv: Float!
+    activo: Boolean!
+}
+
+input SerieInput {
+    serie: String!
+    tipoComprobante: TipoComprobante!
+}
+
+type SerieResponse {
+    id: ID!
+    serie: String!
+    correlativo: Int!
+    tipoComprobante: TipoComprobante!
+    activo: Boolean!
+}
+
+input FacturaInput {
+    tipoComprobante: TipoComprobante!
+    reservaId: ID!
+    clienteTipoDoc: String
+    clienteNumeroDoc: String
+    clienteRazonSocial: String
+    clienteDireccion: String
+}
+
+type FacturaResponse {
+    id: ID!
+    emisorId: ID!
+    emisorRuc: String!
+    emisorRazonSocial: String!
+    serieId: ID!
+    serieCodigo: String!
+    correlativo: Int!
+    tipoComprobante: TipoComprobante!
+    numeroComprobante: String!
+    fechaEmision: String!
+    fechaVencimiento: String
+    clienteTipoDoc: String
+    clienteNumeroDoc: String
+    clienteRazonSocial: String
+    opGravadas: Float!
+    igv: Float!
+    total: Float!
+    nombreXml: String
+    codigoSunat: String
+    mensajeSunat: String
+    estado: EstadoFacturaEnum!
+    reservaId: ID
+    huespedId: ID
+    metodoPago: MetodoPago
+}
+
+type FacturaPage {
+    items: [FacturaResponse!]!
+    totalItems: Int!
+    totalPages: Int!
+    currentPage: Int!
+}
