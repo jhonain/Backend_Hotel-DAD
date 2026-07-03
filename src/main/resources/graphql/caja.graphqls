@@ -4,7 +4,9 @@ extend type Query {
     cajaAbierta(empleadoId: ID!): CajaResponse
     cajasPorEmpleado(empleadoId: ID!): [CajaResponse!]!
     cajasPorFecha(inicio: String!, fin: String!): [CajaResponse!]!
+    cajasPorFechaPaginado(inicio: String!, fin: String!, page: Int! = 0, size: Int! = 20): CajaPage!
     movimientosDeCaja(cajaId: ID!): [MovimientoResponse!]!
+    movimientosDeCajaPaginados(cajaId: ID!, page: Int! = 0, size: Int! = 20): MovimientoPage!
     resumenCaja(inicio: String!, fin: String!): ResumenCaja!
 }
 
@@ -53,6 +55,20 @@ type MovimientoResponse {
     monto: Float!
     concepto: String!
     fecha: String!
+}
+
+type CajaPage {
+    items: [CajaResponse!]!
+    totalItems: Int!
+    totalPages: Int!
+    currentPage: Int!
+}
+
+type MovimientoPage {
+    items: [MovimientoResponse!]!
+    totalItems: Int!
+    totalPages: Int!
+    currentPage: Int!
 }
 
 type ResumenCaja {

@@ -55,8 +55,20 @@ public class CajaResolver {
 
     @QueryMapping
     @PreAuthorize("hasAuthority('caja:ver')")
+    public MovimientoPage movimientosDeCajaPaginados(@Argument Long cajaId, @Argument int page, @Argument int size) {
+        return cajaService.movimientosDeCajaPaginados(cajaId, page, size);
+    }
+
+    @QueryMapping
+    @PreAuthorize("hasAuthority('caja:ver')")
     public ResumenCaja resumenCaja(@Argument String inicio, @Argument String fin) {
         return cajaService.resumenCaja(inicio, fin);
+    }
+
+    @QueryMapping
+    @PreAuthorize("hasAuthority('caja:ver')")
+    public CajaPage cajasPorFechaPaginado(@Argument String inicio, @Argument String fin, @Argument int page, @Argument int size) {
+        return cajaService.listarPorFechaPaginado(inicio, fin, page, size);
     }
 
     @MutationMapping

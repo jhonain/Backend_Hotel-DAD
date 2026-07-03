@@ -2,6 +2,8 @@ package com.hotel.backend_hotel.Caja.repository;
 
 import com.hotel.backend_hotel.Caja.entity.MovimientoCaja;
 import com.hotel.backend_hotel.Enums.TipoMovimiento;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +13,8 @@ import java.util.List;
 
 public interface MovimientoRepository extends JpaRepository<MovimientoCaja, Long> {
     List<MovimientoCaja> findByCajaId(Long cajaId);
+
+    Page<MovimientoCaja> findByCajaId(Long cajaId, Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(m.monto), 0) FROM MovimientoCaja m WHERE m.caja.id = :cajaId AND m.tipo = :tipo")
     Double sumByCajaIdAndTipo(@Param("cajaId") Long cajaId, @Param("tipo") TipoMovimiento tipo);

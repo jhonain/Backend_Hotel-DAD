@@ -14,9 +14,11 @@ public interface CajaService {
     List<CajaResponse> listarPorEmpleado(Long empleadoId);
     List<CajaResponse> listarPorFecha(String inicio, String fin);
     List<CajaResponse> listarTodas();
+    CajaPage listarPorFechaPaginado(String inicio, String fin, int page, int size);
 
     MovimientoResponse registrarIngreso(Long cajaId, Long reservaId, Double monto, String concepto);
     MovimientoResponse registrarEgreso(MovimientoRequest request);
     List<MovimientoResponse> movimientosDeCaja(Long cajaId);
+    MovimientoPage movimientosDeCajaPaginados(Long cajaId, int page, int size);
     ResumenCaja resumenCaja(String inicio, String fin);
 }

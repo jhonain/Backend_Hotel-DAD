@@ -16,6 +16,10 @@ import com.hotel.backend_hotel.Reserva.repository.ReservaRepository;
 import com.hotel.backend_hotel.common.Excepcion.ExcepcionEmpresarial;
 import com.hotel.backend_hotel.common.Excepcion.ExcepcionNoEncontrada;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -130,6 +134,20 @@ public class CajaServiceImpl implements CajaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public CajaPage listarPorFechaPaginado(String inicio, String fin, int page, int size) {
+        LocalDateTime inicioDt = LocalDateTime.parse(inicio, FMT);
+        LocalDateTime finDt = LocalDateTime.parse(fin, FMT);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fechaApertura").descending());
+        Page<Caja> pageResult = cajaRepository.findByFechaAperturaBetween(inicioDt, finDt, pageable);
+        List<CajaResponse> items = pageResult.getContent().stream()
+                .map(this::toCajaResponse)
+                .toList();
+        return new CajaPage(items, pageResult.getTotalElements(),
+                pageResult.getTotalPages(), pageResult.getNumber());
+    }
+
+    @Override
     @Transactional
     public MovimientoResponse registrarIngreso(Long cajaId, Long reservaId, Double monto, String concepto) {
         Caja caja = cajaRepository.findById(cajaId)
@@ -182,6 +200,18 @@ public class CajaServiceImpl implements CajaService {
         return movimientoRepository.findByCajaId(cajaId).stream()
                 .map(this::toMovimientoResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MovimientoPage movimientosDeCajaPaginados(Long cajaId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fecha").descending());
+        Page<MovimientoCaja> pageResult = movimientoRepository.findByCajaId(cajaId, pageable);
+        List<MovimientoResponse> items = pageResult.getContent().stream()
+                .map(this::toMovimientoResponse)
+                .toList();
+        return new MovimientoPage(items, pageResult.getTotalElements(),
+                pageResult.getTotalPages(), pageResult.getNumber());
     }
 
     @Override

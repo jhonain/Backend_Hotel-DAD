@@ -37,7 +37,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReservaServiceImpl implements ReservaService {
 
-    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final ReservaRepository reservaRepository;
     private final HuespedRepository huespedRepository;

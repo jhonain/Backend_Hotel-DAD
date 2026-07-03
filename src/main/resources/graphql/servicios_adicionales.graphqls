@@ -1,0 +1,36 @@
+extend type Query {
+    serviciosAdicionales: [ServicioAdicionalResponse!]!
+    servicioAdicional(id: ID!): ServicioAdicionalResponse
+}
+
+extend type Mutation {
+    crearServicioAdicional(input: ServicioAdicionalInput!): ServicioAdicionalResponse!
+    editarServicioAdicional(id: ID!, input: ServicioAdicionalInput!): ServicioAdicionalResponse!
+    eliminarServicioAdicional(id: ID!): Boolean!
+}
+
+enum CategoriaServicio {
+    WIFI
+    ALIMENTACION
+    LAVANDERIA
+    GIMNASIO
+    SPA
+    OTROS
+}
+
+input ServicioAdicionalInput {
+    nombre: String!
+    descripcion: String
+    precio: Float!
+    categoria: CategoriaServicio!
+    disponible: Boolean
+}
+
+type ServicioAdicionalResponse {
+    id: ID!
+    nombre: String!
+    descripcion: String
+    precio: Float!
+    categoria: CategoriaServicio!
+    disponible: Boolean!
+}
