@@ -14,6 +14,8 @@ import com.hotel.backend_hotel.Reserva.dto.ReservaResponse;
 import com.hotel.backend_hotel.Reserva.entity.Reserva;
 import com.hotel.backend_hotel.Reserva.repository.ReservaRepository;
 import com.hotel.backend_hotel.Reserva.service.ReservaService;
+import com.hotel.backend_hotel.Auth.entity.Usuario;
+import com.hotel.backend_hotel.Caja.dto.CajaResponse;
 import com.hotel.backend_hotel.Caja.entity.Pago;
 import com.hotel.backend_hotel.Caja.repository.PagoRepository;
 import com.hotel.backend_hotel.Caja.service.CajaService;
@@ -26,6 +28,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -162,6 +166,12 @@ public class ReservaServiceImpl implements ReservaService {
 
         if (!reservaRepository.findOverlapping(request.habitacionId(), checkIn, checkOut).isEmpty()) {
             throw new ExcepcionEmpresarial("La habitación ya tiene una reserva en ese rango de fechas");
+        }
+
+        // Validar que exista una caja abierta
+        CajaResponse cajaAbierta = cajaService.buscarCajaAbierta();
+        if (cajaAbierta == null) {
+            throw new ExcepcionEmpresarial("No hay una caja abierta. Debe abrir caja antes de crear una reserva.");
         }
 
         long noches = checkOut.toLocalDate().toEpochDay() - checkIn.toLocalDate().toEpochDay();
@@ -306,17 +316,16 @@ public class ReservaServiceImpl implements ReservaService {
         pagoRepository.save(pago);
 
         // Registrar INGRESO en caja
-        try {
-            var cajaResponse = cajaService.obtenerOCrearCajaAbierta(reserva.getEmpleado().getId());
-            cajaService.registrarIngreso(
-                    cajaResponse.id(),
-                    reserva.getId(),
-                    reserva.getTotalPagar(),
-                    "Check-in: Hab " + habitacion.getNumero() + " - " + reserva.getHuesped().getNombre()
-            );
-        } catch (Exception e) {
-            System.err.println("Error al registrar ingreso en caja: " + e.getMessage());
+        CajaResponse cajaResponse = cajaService.buscarCajaAbierta();
+        if (cajaResponse == null) {
+            throw new ExcepcionEmpresarial("No hay una caja abierta. Debe abrir caja antes de hacer check-in.");
         }
+        cajaService.registrarIngreso(
+                cajaResponse.id(),
+                reserva.getId(),
+                reserva.getTotalPagar(),
+                "Check-in: Hab " + habitacion.getNumero() + " - " + reserva.getHuesped().getNombre()
+        );
 
         notificacionResolver.emitiNotificacion(
                 "Check-in: Hab " + habitacion.getNumero() + " - " + reserva.getHuesped().getNombre(),

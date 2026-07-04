@@ -12,9 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CajaRepository extends JpaRepository<Caja, Long> {
-    Optional<Caja> findByEmpleadoIdAndEstado(Long empleadoId, EstadoCaja estado);
-
-    List<Caja> findByEmpleadoId(Long empleadoId);
+    Optional<Caja> findByEstado(EstadoCaja estado);
 
     List<Caja> findByFechaAperturaBetween(LocalDateTime inicio, LocalDateTime fin);
 

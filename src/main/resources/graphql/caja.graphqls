@@ -1,8 +1,7 @@
 extend type Query {
     cajas: [CajaResponse!]!
     caja(id: ID!): CajaResponse
-    cajaAbierta(empleadoId: ID!): CajaResponse
-    cajasPorEmpleado(empleadoId: ID!): [CajaResponse!]!
+    cajaAbierta: CajaResponse
     cajasPorFecha(inicio: String!, fin: String!): [CajaResponse!]!
     cajasPorFechaPaginado(inicio: String!, fin: String!, page: Int! = 0, size: Int! = 20): CajaPage!
     movimientosDeCaja(cajaId: ID!): [MovimientoResponse!]!
@@ -11,7 +10,7 @@ extend type Query {
 }
 
 extend type Mutation {
-    abrirCaja(empleadoId: ID!, montoInicial: Float!): CajaResponse!
+    abrirCaja(montoInicial: Float!): CajaResponse!
     cerrarCaja(id: ID!, montoFinal: Float!): CajaResponse!
     registrarEgreso(input: EgresoInput!): MovimientoResponse!
 }

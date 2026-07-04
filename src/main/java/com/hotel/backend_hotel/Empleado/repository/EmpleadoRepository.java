@@ -17,4 +17,6 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
     boolean existsByUsuarioId(Long usuarioId);
 
+    Optional<Empleado> findByUsuarioId(Long usuarioId);
+
 }

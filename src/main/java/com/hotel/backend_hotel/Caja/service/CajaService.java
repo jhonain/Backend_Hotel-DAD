@@ -1,17 +1,14 @@
 package com.hotel.backend_hotel.Caja.service;
 
 import com.hotel.backend_hotel.Caja.dto.*;
-import com.hotel.backend_hotel.Reserva.entity.Reserva;
 
 import java.util.List;
 
 public interface CajaService {
-    CajaResponse abrirCaja(Long empleadoId, Double montoInicial);
+    CajaResponse abrirCaja(Double montoInicial);
     CajaResponse cerrarCaja(Long cajaId, Double montoFinal);
-    CajaResponse obtenerOCrearCajaAbierta(Long empleadoId);
     CajaResponse buscarPorId(Long id);
-    CajaResponse buscarCajaAbierta(Long empleadoId);
-    List<CajaResponse> listarPorEmpleado(Long empleadoId);
+    CajaResponse buscarCajaAbierta();
     List<CajaResponse> listarPorFecha(String inicio, String fin);
     List<CajaResponse> listarTodas();
     CajaPage listarPorFechaPaginado(String inicio, String fin, int page, int size);

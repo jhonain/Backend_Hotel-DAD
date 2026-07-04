@@ -1,5 +1,6 @@
 package com.hotel.backend_hotel.Caja.service.Impl;
 
+import com.hotel.backend_hotel.Auth.entity.Usuario;
 import com.hotel.backend_hotel.Caja.dto.*;
 import com.hotel.backend_hotel.Caja.entity.Caja;
 import com.hotel.backend_hotel.Caja.entity.MovimientoCaja;
@@ -20,10 +21,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -42,13 +44,15 @@ public class CajaServiceImpl implements CajaService {
 
     @Override
     @Transactional
-    public CajaResponse abrirCaja(Long empleadoId, Double montoInicial) {
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new ExcepcionNoEncontrada("Empleado no encontrado con id: " + empleadoId));
-
-        if (cajaRepository.findByEmpleadoIdAndEstado(empleadoId, EstadoCaja.ABIERTA).isPresent()) {
-            throw new ExcepcionEmpresarial("El empleado ya tiene una caja abierta");
+    public CajaResponse abrirCaja(Double montoInicial) {
+        if (cajaRepository.findByEstado(EstadoCaja.ABIERTA).isPresent()) {
+            throw new ExcepcionEmpresarial("Ya existe una caja abierta");
         }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Usuario usuario = (Usuario) auth.getPrincipal();
+        Empleado empleado = empleadoRepository.findByUsuarioId(usuario.getId())
+                .orElseThrow(() -> new ExcepcionEmpresarial("Empleado no encontrado para el usuario autenticado"));
 
         TurnoEmpleado turno = determinarTurno();
         String codigo = generarCodigo();
@@ -84,14 +88,6 @@ public class CajaServiceImpl implements CajaService {
     }
 
     @Override
-    @Transactional
-    public CajaResponse obtenerOCrearCajaAbierta(Long empleadoId) {
-        return cajaRepository.findByEmpleadoIdAndEstado(empleadoId, EstadoCaja.ABIERTA)
-                .map(this::toCajaResponse)
-                .orElseGet(() -> abrirCaja(empleadoId, 0.0));
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public CajaResponse buscarPorId(Long id) {
         Caja caja = cajaRepository.findById(id)
@@ -101,18 +97,10 @@ public class CajaServiceImpl implements CajaService {
 
     @Override
     @Transactional(readOnly = true)
-    public CajaResponse buscarCajaAbierta(Long empleadoId) {
-        return cajaRepository.findByEmpleadoIdAndEstado(empleadoId, EstadoCaja.ABIERTA)
+    public CajaResponse buscarCajaAbierta() {
+        return cajaRepository.findByEstado(EstadoCaja.ABIERTA)
                 .map(this::toCajaResponse)
                 .orElse(null);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CajaResponse> listarPorEmpleado(Long empleadoId) {
-        return cajaRepository.findByEmpleadoId(empleadoId).stream()
-                .map(this::toCajaResponse)
-                .toList();
     }
 
     @Override

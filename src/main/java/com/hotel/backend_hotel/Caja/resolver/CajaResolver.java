@@ -31,14 +31,8 @@ public class CajaResolver {
 
     @QueryMapping
     @PreAuthorize("hasAuthority('caja:ver')")
-    public CajaResponse cajaAbierta(@Argument Long empleadoId) {
-        return cajaService.buscarCajaAbierta(empleadoId);
-    }
-
-    @QueryMapping
-    @PreAuthorize("hasAuthority('caja:ver')")
-    public List<CajaResponse> cajasPorEmpleado(@Argument Long empleadoId) {
-        return cajaService.listarPorEmpleado(empleadoId);
+    public CajaResponse cajaAbierta() {
+        return cajaService.buscarCajaAbierta();
     }
 
     @QueryMapping
@@ -73,8 +67,8 @@ public class CajaResolver {
 
     @MutationMapping
     @PreAuthorize("hasAuthority('caja:crear')")
-    public CajaResponse abrirCaja(@Argument Long empleadoId, @Argument Double montoInicial) {
-        return cajaService.abrirCaja(empleadoId, montoInicial);
+    public CajaResponse abrirCaja(@Argument Double montoInicial) {
+        return cajaService.abrirCaja(montoInicial);
     }
 
     @MutationMapping
