@@ -33,14 +33,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -155,29 +152,38 @@ public class FacturacionServiceImpl implements FacturacionService {
     @Override
     @Transactional
     public FacturaResponse generarFactura(FacturaRequest request) {
-        Reserva reserva = reservaRepository.findById(request.reservaId())
-                .orElseThrow(() -> new ExcepcionNoEncontrada("Reserva no encontrada: " + request.reservaId()));
-
-        if (request.tipoComprobante() == TipoComprobante.FACTURA &&
-                (request.clienteNumeroDoc() == null || request.clienteRazonSocial() == null)) {
-            throw new ExcepcionEmpresarial("Factura requiere RUC/Nro Documeto y Razon Social del cliente");
-        }
-
-
-        Huesped huesped = reserva.getHuesped();
         Emisor emisor = emisorRepository.findByActivoTrue()
                 .orElseThrow(() -> new ExcepcionEmpresarial("No hay un emisor activo configurado"));
 
         Serie serie = serieRepository.findByTipoComprobanteAndActivoTrue(request.tipoComprobante())
                 .orElseThrow(() -> new ExcepcionEmpresarial("No hay serie activa para " + request.tipoComprobante()));
 
+        if (request.tipoComprobante() == TipoComprobante.FACTURA &&
+                (request.clienteNumeroDoc() == null || request.clienteRazonSocial() == null)) {
+            throw new ExcepcionEmpresarial("Factura requiere RUC y Razón Social del cliente");
+        }
+
+        Huesped huesped = null;
+        if (request.clienteId() != null) {
+            huesped = huespedRepository.findById(request.clienteId())
+                    .orElseThrow(() -> new ExcepcionNoEncontrada("Huésped no encontrado: " + request.clienteId()));
+        }
+
+        List<Reserva> reservas = new ArrayList<>();
+        if (request.reservaIds() != null) {
+            for (Long rid : request.reservaIds()) {
+                Reserva r = reservaRepository.findById(rid)
+                        .orElseThrow(() -> new ExcepcionNoEncontrada("Reserva no encontrada: " + rid));
+                reservas.add(r);
+                if (huesped == null) huesped = r.getHuesped();
+            }
+        }
+
+        if (huesped == null && request.clienteId() == null) {
+            throw new ExcepcionEmpresarial("Debe especificar un cliente o al menos una reserva");
+        }
+
         int correlativo = numeracionService.siguienteCorrelativo(serie.getId());
-
-        long noches = ChronoUnit.DAYS.between(reserva.getCheckIn().toLocalDate(), reserva.getCheckOut().toLocalDate());
-        noches = Math.max(noches, 1);
-        double precioPorNoche = reserva.getTotalPagar() / noches;
-
-        CalculosTributarios.TotalesCalculados totales = CalculosTributarios.calcularTotalesDesdeTotalConIgv(reserva.getTotalPagar());
 
         Factura factura = new Factura();
         factura.setEmisor(emisor);
@@ -187,9 +193,8 @@ public class FacturacionServiceImpl implements FacturacionService {
         factura.setCorrelativo(correlativo);
         factura.setFechaEmision(LocalDate.now());
         factura.setFechaVencimiento(LocalDate.now().plusDays(7));
-        factura.setReserva(reserva);
         factura.setHuesped(huesped);
-        factura.setMetodoPago(reserva.getMetodoPago() != null ? reserva.getMetodoPago() : MetodoPago.EFECTIVO);
+        factura.setMetodoPago(huesped != null ? MetodoPago.EFECTIVO : MetodoPago.EFECTIVO);
 
         if (request.tipoComprobante() == TipoComprobante.FACTURA) {
             String tipoDoc = request.clienteTipoDoc();
@@ -200,39 +205,82 @@ public class FacturacionServiceImpl implements FacturacionService {
             factura.setClienteNumeroDoc(request.clienteNumeroDoc());
             factura.setClienteRazonSocial(request.clienteRazonSocial());
             factura.setClienteDireccion(request.clienteDireccion());
-        } else {
+        } else if (huesped != null) {
             factura.setClienteTipoDoc(CatalogosSunat.tipoDocToSunat(huesped.getTipoDocumento()));
             factura.setClienteNumeroDoc(huesped.getNumeroDocumento());
             factura.setClienteRazonSocial(huesped.getNombre() + " " + huesped.getApellido());
             factura.setClienteDireccion(null);
         }
 
+        factura = facturaRepository.save(factura);
+
+        List<DetalleFactura> detalles = new ArrayList<>();
+        int itemNum = 1;
+
+        for (Reserva r : reservas) {
+            long noches = ChronoUnit.DAYS.between(r.getCheckIn().toLocalDate(), r.getCheckOut().toLocalDate());
+            noches = Math.max(noches, 1);
+            double precioPorNoche = r.getTotalPagar() / noches;
+
+            for (int i = 1; i <= noches; i++) {
+                CalculosTributarios.LineaCalculada linea = CalculosTributarios.calcularLineaDetalle(1, precioPorNoche / 1.18);
+                DetalleFactura detalle = new DetalleFactura();
+                detalle.setFactura(factura);
+                detalle.setItem(itemNum++);
+                detalle.setDescripcion("Hospedaje " + r.getHabitacion().getNumero() + " - Noche " + i);
+                detalle.setCantidad(1.0);
+                detalle.setUnidadMedida("ZZ");
+                detalle.setValorUnitario(linea.valorUnitario().doubleValue());
+                detalle.setPrecioUnitario(linea.precioUnitario().doubleValue());
+                detalle.setIgv(linea.igv().doubleValue());
+                detalle.setPorcentajeIgv(18.0);
+                detalle.setValorTotal(linea.valorTotal().doubleValue());
+                detalle.setImporteTotal(linea.importeTotal().doubleValue());
+                detalles.add(detalle);
+            }
+        }
+
+        if (request.itemsExtra() != null) {
+            for (ItemManualInput extra : request.itemsExtra()) {
+                double valorUnitarioSinIgv = extra.precioUnitario() / 1.18;
+                var linea = CalculosTributarios.calcularLineaDetalle(extra.cantidad(), valorUnitarioSinIgv);
+
+                DetalleFactura detalle = new DetalleFactura();
+                detalle.setFactura(factura);
+                detalle.setItem(itemNum++);
+                detalle.setDescripcion(extra.descripcion());
+                detalle.setCantidad(extra.cantidad());
+                detalle.setUnidadMedida(extra.unidadMedida() != null ? extra.unidadMedida() : "ZZ");
+                detalle.setValorUnitario(linea.valorUnitario().doubleValue());
+                detalle.setPrecioUnitario(linea.precioUnitario().doubleValue());
+                detalle.setIgv(linea.igv().doubleValue());
+                detalle.setPorcentajeIgv(18.0);
+                detalle.setValorTotal(linea.valorTotal().doubleValue());
+                detalle.setImporteTotal(linea.importeTotal().doubleValue());
+                detalles.add(detalle);
+            }
+        }
+
+        if (detalles.isEmpty()) {
+            throw new ExcepcionEmpresarial("La factura debe tener al menos un item");
+        }
+
+        var totales = CalculosTributarios.sumarTotalesLineas(
+                detalles.stream().map(d -> new CalculosTributarios.LineaCalculada(
+                        java.math.BigDecimal.valueOf(d.getValorUnitario()),
+                        java.math.BigDecimal.valueOf(d.getPrecioUnitario()),
+                        java.math.BigDecimal.valueOf(d.getValorTotal()),
+                        java.math.BigDecimal.valueOf(d.getIgv()),
+                        java.math.BigDecimal.valueOf(d.getPorcentajeIgv()),
+                        java.math.BigDecimal.valueOf(d.getImporteTotal())
+                )).toList()
+        );
+
         factura.setOpGravadas(totales.opGravadas().doubleValue());
         factura.setIgv(totales.igv().doubleValue());
         factura.setTotal(totales.total().doubleValue());
         factura.setEstado(EstadoFactura.BORRADOR);
-
-        factura = facturaRepository.save(factura);
-
-        List<DetalleFactura> detalles = new ArrayList<>();
-        for (int i = 1; i <= noches; i++) {
-            CalculosTributarios.LineaCalculada linea = CalculosTributarios.calcularLineaDetalle(1, precioPorNoche / 1.18);
-
-            DetalleFactura detalle = new DetalleFactura();
-            detalle.setFactura(factura);
-            detalle.setItem(i);
-            detalle.setDescripcion("Hospedaje - Noche " + i + " (Hab " + reserva.getHabitacion().getNumero() + ")");
-            detalle.setCantidad(1.0);
-            detalle.setUnidadMedida("ZZ");
-            detalle.setValorUnitario(linea.valorUnitario().doubleValue());
-            detalle.setPrecioUnitario(linea.precioUnitario().doubleValue());
-            detalle.setIgv(linea.igv().doubleValue());
-            detalle.setPorcentajeIgv(18.0);
-            detalle.setValorTotal(linea.valorTotal().doubleValue());
-            detalle.setImporteTotal(linea.importeTotal().doubleValue());
-            detalles.add(detalle);
-        }
-
+        facturaRepository.save(factura);
         detalleFacturaRepository.saveAll(detalles);
 
         try {
@@ -266,7 +314,7 @@ public class FacturacionServiceImpl implements FacturacionService {
                 factura.setEstado(EstadoFactura.RECHAZADO);
             }
             factura.setXmlFirmado(nombreBase + ".xml");
-            if (resultado.cdrFile() != null){
+            if (resultado.cdrFile() != null) {
                 factura.setCdrBase64(resultado.cdrFile());
             }
         } catch (Exception e) {
@@ -308,9 +356,17 @@ public class FacturacionServiceImpl implements FacturacionService {
     }
 
     @Override
-    public FacturaPage listarFacturasPaginadas(int page, int size) {
+    public List<DetalleResponse> listarDetalleFactura(Long facturaId) {
+        return detalleFacturaRepository.findByFacturaId(facturaId).stream()
+                .map(this::toDetalleResponse).toList();
+    }
+
+    @Override
+    public FacturaPage listarFacturasPaginadas(int page, int size, TipoComprobante tipo, EstadoFactura estado, LocalDate fechaInicio, LocalDate fechaFin) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Factura> pageResult = facturaRepository.findAll(pageable);
+        LocalDate inicio = fechaInicio != null ? fechaInicio : LocalDate.of(1900, 1, 1);
+        LocalDate fin = fechaFin != null ? fechaFin : LocalDate.of(9999, 12, 31);
+        Page<Factura> pageResult = facturaRepository.findAllWithFilters(tipo, estado, inicio, fin, pageable);
         List<FacturaResponse> items = pageResult.getContent().stream()
                 .map(this::toFacturaResponse).toList();
         return new FacturaPage(items, pageResult.getTotalElements(),
@@ -328,8 +384,17 @@ public class FacturacionServiceImpl implements FacturacionService {
         return new SerieResponse(s.getId(), s.getSerie(), s.getCorrelativo(), s.getTipoComprobante(), s.getActivo());
     }
 
+    private DetalleResponse toDetalleResponse(DetalleFactura d) {
+        return new DetalleResponse(
+                d.getId(), d.getItem(), d.getDescripcion(), d.getCantidad(),
+                d.getUnidadMedida(), d.getValorUnitario(), d.getPrecioUnitario(),
+                d.getIgv(), d.getPorcentajeIgv(), d.getValorTotal(), d.getImporteTotal());
+    }
+
     private FacturaResponse toFacturaResponse(Factura f) {
         String numero = f.getSerieCodigo() + "-" + String.format("%08d", f.getCorrelativo());
+        List<DetalleResponse> items = detalleFacturaRepository.findByFacturaId(f.getId())
+                .stream().map(this::toDetalleResponse).toList();
         return new FacturaResponse(
                 f.getId(),
                 f.getEmisor().getId(), f.getEmisor().getRuc(), f.getEmisor().getRazonSocial(),
@@ -337,11 +402,13 @@ public class FacturacionServiceImpl implements FacturacionService {
                 f.getTipoComprobante(), numero,
                 f.getFechaEmision(), f.getFechaVencimiento(),
                 f.getClienteTipoDoc(), f.getClienteNumeroDoc(), f.getClienteRazonSocial(),
+                f.getClienteDireccion(),
                 f.getOpGravadas(), f.getIgv(), f.getTotal(),
                 f.getNombreXml(), f.getCodigoSunat(), f.getMensajeSunat(),
                 f.getEstado(),
                 f.getReserva() != null ? f.getReserva().getId() : null,
                 f.getHuesped() != null ? f.getHuesped().getId() : null,
-                f.getMetodoPago());
+                f.getMetodoPago(),
+                items);
     }
 }

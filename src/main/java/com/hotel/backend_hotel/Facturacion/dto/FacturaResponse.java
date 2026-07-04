@@ -5,6 +5,7 @@ import com.hotel.backend_hotel.Enums.MetodoPago;
 import com.hotel.backend_hotel.Enums.TipoComprobante;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record FacturaResponse(
         Long id,
@@ -21,6 +22,7 @@ public record FacturaResponse(
         String clienteTipoDoc,
         String clienteNumeroDoc,
         String clienteRazonSocial,
+        String clienteDireccion,
         Double opGravadas,
         Double igv,
         Double total,
@@ -30,5 +32,6 @@ public record FacturaResponse(
         EstadoFactura estado,
         Long reservaId,
         Long huespedId,
-        MetodoPago metodoPago
+        MetodoPago metodoPago,
+        List<DetalleResponse> items
 ) {}

@@ -1,8 +1,10 @@
 package com.hotel.backend_hotel.Facturacion.service;
 
+import com.hotel.backend_hotel.Enums.EstadoFactura;
 import com.hotel.backend_hotel.Enums.TipoComprobante;
 import com.hotel.backend_hotel.Facturacion.dto.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface FacturacionService {
@@ -21,6 +23,7 @@ public interface FacturacionService {
     FacturaResponse buscarFacturaPorNumero(String serie, Integer correlativo);
     List<FacturaResponse> listarFacturasPorReserva(Long reservaId);
     List<FacturaResponse> listarFacturasPorHuesped(Long huespedId);
+    List<DetalleResponse> listarDetalleFactura(Long facturaId);
 
-    FacturaPage listarFacturasPaginadas(int page, int size);
+    FacturaPage listarFacturasPaginadas(int page, int size, TipoComprobante tipo, EstadoFactura estado, LocalDate fechaInicio, LocalDate fechaFin);
 }

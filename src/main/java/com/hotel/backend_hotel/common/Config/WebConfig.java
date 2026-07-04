@@ -20,6 +20,12 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/graphiql/**")
                 .allowedOrigins("http://localhost:5173")
                 .allowedMethods("GET", "POST");
+
+        registry.addMapping("/api/facturacion/**")
+                .allowedOrigins("http://localhost:5173")
+                .allowedMethods("GET", "POST", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 
 }

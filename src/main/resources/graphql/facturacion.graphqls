@@ -6,7 +6,8 @@ extend type Query {
     facturaPorNumero(serie: String!, correlativo: Int!): FacturaResponse
     facturasPorReserva(reservaId: ID!): [FacturaResponse!]!
     facturasPorHuesped(huespedId: ID!): [FacturaResponse!]!
-    facturasPaginadas(page: Int! = 0, size: Int! = 20): FacturaPage!
+    facturasPaginadas(page: Int! = 0, size: Int! = 20, tipo: TipoComprobante, estado: EstadoFacturaEnum, fechaInicio: String, fechaFin: String): FacturaPage!
+    detalleFactura(facturaId: ID!): [DetalleResponse!]!
 }
 
 extend type Mutation {
@@ -69,13 +70,36 @@ type SerieResponse {
     activo: Boolean!
 }
 
+input ItemManualInput {
+    descripcion: String!
+    cantidad: Float! = 1
+    precioUnitario: Float!
+    unidadMedida: String
+}
+
 input FacturaInput {
     tipoComprobante: TipoComprobante!
-    reservaId: ID!
+    clienteId: ID
+    reservaIds: [ID!]
+    itemsExtra: [ItemManualInput!]
     clienteTipoDoc: String
     clienteNumeroDoc: String
     clienteRazonSocial: String
     clienteDireccion: String
+}
+
+type DetalleResponse {
+    id: ID!
+    item: Int!
+    descripcion: String!
+    cantidad: Float!
+    unidadMedida: String
+    valorUnitario: Float!
+    precioUnitario: Float!
+    igv: Float!
+    porcentajeIgv: Float!
+    valorTotal: Float!
+    importeTotal: Float!
 }
 
 type FacturaResponse {
@@ -93,6 +117,7 @@ type FacturaResponse {
     clienteTipoDoc: String
     clienteNumeroDoc: String
     clienteRazonSocial: String
+    clienteDireccion: String
     opGravadas: Float!
     igv: Float!
     total: Float!
@@ -103,6 +128,7 @@ type FacturaResponse {
     reservaId: ID
     huespedId: ID
     metodoPago: MetodoPago
+    items: [DetalleResponse!]!
 }
 
 type FacturaPage {

@@ -43,4 +43,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             @Param("habitacionId") Long habitacionId,
             @Param("checkIn") LocalDateTime checkIn,
             @Param("checkOut") LocalDateTime checkOut);
+
+    @Query("SELECT r FROM Reserva r WHERE r.huesped.id = :huespedId AND r.estado = 'COMPLETADA' " +
+           "AND r.id NOT IN (SELECT f.reserva.id FROM Factura f WHERE f.reserva IS NOT NULL)")
+    List<Reserva> findFacturablesByHuespedId(@Param("huespedId") Long huespedId);
 }

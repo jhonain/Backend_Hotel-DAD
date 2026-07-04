@@ -1,11 +1,14 @@
 package com.hotel.backend_hotel.Facturacion.dto;
 
 import com.hotel.backend_hotel.Enums.TipoComprobante;
-import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
 
 public record FacturaRequest(
-        @NotNull TipoComprobante tipoComprobante,
-        @NotNull Long reservaId,
+        TipoComprobante tipoComprobante,
+        Long clienteId,
+        List<Long> reservaIds,
+        List<ItemManualInput> itemsExtra,
         String clienteTipoDoc,
         String clienteNumeroDoc,
         String clienteRazonSocial,

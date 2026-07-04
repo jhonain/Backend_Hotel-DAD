@@ -1,5 +1,6 @@
 package com.hotel.backend_hotel.Facturacion.resolver;
 
+import com.hotel.backend_hotel.Enums.EstadoFactura;
 import com.hotel.backend_hotel.Enums.TipoComprobante;
 import com.hotel.backend_hotel.Facturacion.dto.*;
 import com.hotel.backend_hotel.Facturacion.service.FacturacionService;
@@ -10,6 +11,7 @@ import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -86,7 +88,22 @@ public class FacturacionResolver {
 
     @QueryMapping
     @PreAuthorize("hasAuthority('facturacion:ver')")
-    public FacturaPage facturasPaginadas(@Argument int page, @Argument int size) {
-        return facturacionService.listarFacturasPaginadas(page, size);
+    public FacturaPage facturasPaginadas(
+            @Argument int page,
+            @Argument int size,
+            @Argument TipoComprobante tipo,
+            @Argument EstadoFactura estado,
+            @Argument String fechaInicio,
+            @Argument String fechaFin
+    ) {
+        LocalDate inicio = fechaInicio != null ? LocalDate.parse(fechaInicio) : null;
+        LocalDate fin = fechaFin != null ? LocalDate.parse(fechaFin) : null;
+        return facturacionService.listarFacturasPaginadas(page, size, tipo, estado, inicio, fin);
+    }
+
+    @QueryMapping
+    @PreAuthorize("hasAuthority('facturacion:ver')")
+    public List<DetalleResponse> detalleFactura(@Argument Long facturaId) {
+        return facturacionService.listarDetalleFactura(facturaId);
     }
 }
