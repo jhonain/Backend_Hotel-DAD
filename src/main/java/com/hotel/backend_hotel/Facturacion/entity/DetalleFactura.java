@@ -44,7 +44,7 @@ public class DetalleFactura extends BaseEntity {
     private Double igv;
 
     @Column(name = "porcentaje_igv")
-    private Double porcentajeIgv = 18.0;
+    private Double porcentajeIgv = 10.5;
 
     @Column(name = "valor_total", nullable = false)
     private Double valorTotal;

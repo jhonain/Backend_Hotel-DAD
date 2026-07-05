@@ -5,8 +5,8 @@ import java.math.RoundingMode;
 
 public class CalculosTributarios {
 
-    public static final BigDecimal IGV_TASA = new BigDecimal("0.18");
-    public static final BigDecimal IGV_FACTOR = new BigDecimal("1.18");
+    public static final BigDecimal IGV_TASA = new BigDecimal("0.105");
+    public static final BigDecimal IGV_FACTOR = new BigDecimal("1.105");
 
     public static record LineaCalculada(
             BigDecimal valorUnitario,

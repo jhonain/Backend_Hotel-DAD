@@ -75,7 +75,7 @@ public class FacturacionServiceImpl implements FacturacionService {
         emisor.setDistrito(request.distrito());
         emisor.setUsuarioSol(request.usuarioSol());
         emisor.setClaveSol(request.claveSol());
-        emisor.setPorcentajeIgv(request.porcentajeIgv() != null ? request.porcentajeIgv() : new java.math.BigDecimal("18.00"));
+        emisor.setPorcentajeIgv(request.porcentajeIgv() != null ? request.porcentajeIgv() : new java.math.BigDecimal("10.50"));
         emisor = emisorRepository.save(emisor);
         return toEmisorResponse(emisor);
     }
@@ -223,7 +223,7 @@ public class FacturacionServiceImpl implements FacturacionService {
             double precioPorNoche = r.getTotalPagar() / noches;
 
             for (int i = 1; i <= noches; i++) {
-                CalculosTributarios.LineaCalculada linea = CalculosTributarios.calcularLineaDetalle(1, precioPorNoche / 1.18);
+                CalculosTributarios.LineaCalculada linea = CalculosTributarios.calcularLineaDetalle(1, precioPorNoche / CalculosTributarios.IGV_FACTOR.doubleValue());
                 DetalleFactura detalle = new DetalleFactura();
                 detalle.setFactura(factura);
                 detalle.setItem(itemNum++);
@@ -233,7 +233,7 @@ public class FacturacionServiceImpl implements FacturacionService {
                 detalle.setValorUnitario(linea.valorUnitario().doubleValue());
                 detalle.setPrecioUnitario(linea.precioUnitario().doubleValue());
                 detalle.setIgv(linea.igv().doubleValue());
-                detalle.setPorcentajeIgv(18.0);
+                detalle.setPorcentajeIgv(10.5);
                 detalle.setValorTotal(linea.valorTotal().doubleValue());
                 detalle.setImporteTotal(linea.importeTotal().doubleValue());
                 detalles.add(detalle);
@@ -242,7 +242,7 @@ public class FacturacionServiceImpl implements FacturacionService {
 
         if (request.itemsExtra() != null) {
             for (ItemManualInput extra : request.itemsExtra()) {
-                double valorUnitarioSinIgv = extra.precioUnitario() / 1.18;
+                double valorUnitarioSinIgv = extra.precioUnitario() / CalculosTributarios.IGV_FACTOR.doubleValue();
                 var linea = CalculosTributarios.calcularLineaDetalle(extra.cantidad(), valorUnitarioSinIgv);
 
                 DetalleFactura detalle = new DetalleFactura();
@@ -254,7 +254,7 @@ public class FacturacionServiceImpl implements FacturacionService {
                 detalle.setValorUnitario(linea.valorUnitario().doubleValue());
                 detalle.setPrecioUnitario(linea.precioUnitario().doubleValue());
                 detalle.setIgv(linea.igv().doubleValue());
-                detalle.setPorcentajeIgv(18.0);
+                detalle.setPorcentajeIgv(10.5);
                 detalle.setValorTotal(linea.valorTotal().doubleValue());
                 detalle.setImporteTotal(linea.importeTotal().doubleValue());
                 detalles.add(detalle);

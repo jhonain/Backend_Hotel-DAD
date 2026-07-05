@@ -67,7 +67,7 @@ public class XmlUblGenerator {
             m.put("valorUnitario", det.getValorUnitario());
             m.put("precioUnitario", det.getPrecioUnitario());
             m.put("igv", det.getIgv());
-            m.put("porcentajeIgv", det.getPorcentajeIgv() != null ? det.getPorcentajeIgv() : 18.0);
+            m.put("porcentajeIgv", det.getPorcentajeIgv() != null ? det.getPorcentajeIgv() : 10.5);
             m.put("valorTotal", det.getValorTotal());
             m.put("importeTotal", det.getImporteTotal());
             return m;

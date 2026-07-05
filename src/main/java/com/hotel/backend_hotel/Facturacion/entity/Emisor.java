@@ -48,7 +48,7 @@ public class Emisor extends BaseEntity {
     private String claveSol;
 
     @Column(name = "porcentaje_igv", nullable = false, precision = 5, scale = 2)
-    private BigDecimal porcentajeIgv = new BigDecimal("18.00");
+    private BigDecimal porcentajeIgv = new BigDecimal("10.50");
 
     @Column(name = "activo")
     private Boolean activo = true;
