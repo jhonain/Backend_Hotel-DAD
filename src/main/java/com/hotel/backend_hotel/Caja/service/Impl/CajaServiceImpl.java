@@ -16,6 +16,7 @@ import com.hotel.backend_hotel.Reserva.entity.Reserva;
 import com.hotel.backend_hotel.Reserva.repository.ReservaRepository;
 import com.hotel.backend_hotel.common.Excepcion.ExcepcionEmpresarial;
 import com.hotel.backend_hotel.common.Excepcion.ExcepcionNoEncontrada;
+import com.hotel.backend_hotel.common.RealTime.NotificacionResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,7 @@ public class CajaServiceImpl implements CajaService {
     private final MovimientoRepository movimientoRepository;
     private final EmpleadoRepository empleadoRepository;
     private final ReservaRepository reservaRepository;
+    private final NotificacionResolver notificacionResolver;
 
     @Override
     @Transactional
@@ -66,6 +68,7 @@ public class CajaServiceImpl implements CajaService {
         caja.setTurno(turno);
 
         caja = cajaRepository.save(caja);
+        notificacionResolver.emitiNotificacion("Caja " + caja.getCodigo() + " abierta", "CAJA");
         return toCajaResponse(caja);
     }
 
@@ -84,6 +87,7 @@ public class CajaServiceImpl implements CajaService {
         caja.setMontoFinal(montoFinal);
 
         caja = cajaRepository.save(caja);
+        notificacionResolver.emitiNotificacion("Caja " + caja.getCodigo() + " cerrada", "CAJA");
         return toCajaResponse(caja);
     }
 
@@ -179,6 +183,7 @@ public class CajaServiceImpl implements CajaService {
         mov.setFecha(LocalDateTime.now());
 
         mov = movimientoRepository.save(mov);
+        notificacionResolver.emitiNotificacion("Egreso registrado en " + caja.getCodigo(), "CAJA");
         return toMovimientoResponse(mov);
     }
 

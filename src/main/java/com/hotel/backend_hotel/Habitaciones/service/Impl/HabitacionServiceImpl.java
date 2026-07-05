@@ -12,6 +12,7 @@ import com.hotel.backend_hotel.Huesped.dto.HuespedResponse;
 import com.hotel.backend_hotel.Huesped.entity.Huesped;
 import com.hotel.backend_hotel.common.Excepcion.ExcepcionEmpresarial;
 import com.hotel.backend_hotel.common.Excepcion.ExcepcionNoEncontrada;
+import com.hotel.backend_hotel.common.RealTime.NotificacionResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +30,7 @@ import java.util.List;
 public class HabitacionServiceImpl implements HabitacionService {
 
     private final HabitacionRepository habitacionRepository;
+    private final NotificacionResolver notificacionResolver;
 
     @Override
     @Transactional(readOnly = true)
@@ -117,6 +119,7 @@ public class HabitacionServiceImpl implements HabitacionService {
         habitacion.setEstado(request.estado() != null ? request.estado() : EstadoHabitacion.DISPONIBLE);
 
         habitacion = habitacionRepository.save(habitacion);
+        notificacionResolver.emitiNotificacion("Habitación " + request.numero() + " creada", "HABITACIONES");
         return toHabitacionResponse(habitacion);
     }
 
@@ -143,6 +146,7 @@ public class HabitacionServiceImpl implements HabitacionService {
         }
 
         habitacion = habitacionRepository.save(habitacion);
+        notificacionResolver.emitiNotificacion("Habitación " + request.numero() + " actualizada", "HABITACIONES");
         return toHabitacionResponse(habitacion);
     }
 
@@ -161,6 +165,7 @@ public class HabitacionServiceImpl implements HabitacionService {
         }
 
         habitacion = habitacionRepository.save(habitacion);
+        notificacionResolver.emitiNotificacion("Habitación " + habitacion.getNumero() + " pasó a " + estado.name(), "HABITACIONES");
         return toHabitacionResponse(habitacion);
     }
 
@@ -169,6 +174,7 @@ public class HabitacionServiceImpl implements HabitacionService {
     public void eliminarHabitacion(Long id) {
         Habitacion habitacion = habitacionRepository.findById(id)
                 .orElseThrow(() -> new ExcepcionNoEncontrada("Habitación no encontrada con id: " + id));
+        notificacionResolver.emitiNotificacion("Habitación " + habitacion.getNumero() + " eliminada", "HABITACIONES");
         habitacionRepository.delete(habitacion);
     }
 
