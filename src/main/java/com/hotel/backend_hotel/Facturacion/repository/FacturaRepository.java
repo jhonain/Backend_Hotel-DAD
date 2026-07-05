@@ -29,6 +29,9 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
 
     long countByEmisorIdAndFechaEmisionBetween(Long emisorId, LocalDate inicio, LocalDate fin);
 
+    @Query("SELECT COALESCE(SUM(f.total), 0) FROM Factura f WHERE f.fechaEmision BETWEEN :inicio AND :fin")
+    Double sumTotalByFechaEmisionBetween(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
     @Query("SELECT f FROM Factura f WHERE " +
            "(:tipo IS NULL OR f.tipoComprobante = :tipo) AND " +
            "(:estado IS NULL OR f.estado = :estado) AND " +

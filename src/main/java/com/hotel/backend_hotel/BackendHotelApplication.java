@@ -17,7 +17,7 @@ public class BackendHotelApplication {
                 System.setProperty(e.getKey(), e.getValue())
         );
         SpringApplication.run(BackendHotelApplication.class, args);
-        System.out.printf("hola mundo cachero");
+        System.out.printf("hola mundo");
     }
 
 }

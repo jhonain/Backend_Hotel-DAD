@@ -14,4 +14,6 @@ public interface HabitacionRepository extends JpaRepository<Habitacion, Long> {
     List<Habitacion> findByCapacidadGreaterThanEqual(Integer capacidad);
     List<Habitacion> findByPrecioBetween(Double min, Double max);
     Optional<Habitacion> findByNumero(String numero);
+
+    long countByEstado(EstadoHabitacion estado);
 }
