@@ -1,7 +1,11 @@
 package com.hotel.backend_hotel.common.RealTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.graphql.data.method.annotation.SubscriptionMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import jakarta.annotation.PostConstruct;
@@ -9,28 +13,43 @@ import jakarta.annotation.PostConstruct;
 @Controller
 public class NotificacionResolver {
 
-    // Un Sink funciona como un canal/bus de datos donde puedes empujar mensajes desde cualquier servicio
+    private static final Logger log = LoggerFactory.getLogger(NotificacionResolver.class);
+
     private Sinks.Many<NotificacionHotel> sink;
 
     @PostConstruct
     public void init() {
-        // Configuramos el canal para que permita múltiples suscriptores en tiempo real
-        this.sink = Sinks.many().multicast().onBackpressureBuffer();
+        this.sink = Sinks.many().multicast().onBackpressureBuffer(256, false);
     }
 
-    // 🌐 Este método mantiene abierto el WebSocket con React
     @SubscriptionMapping
     public Flux<NotificacionHotel> notificacionesSistema() {
         return sink.asFlux();
     }
 
-    // Método auxiliar público para emitir eventos desde tus otros servicios (ej: Reservas, Caja)
     public void emitiNotificacion(String mensaje, String modulo) {
         NotificacionHotel notificacion = new NotificacionHotel(
-                System.currentTimeMillis(), // ID temporal
+                System.currentTimeMillis(),
                 mensaje,
                 modulo
         );
-        sink.tryEmitNext(notificacion);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            emitir(notificacion);
+                        }
+                    });
+        } else {
+            emitir(notificacion);
+        }
+    }
+
+    private void emitir(NotificacionHotel notificacion) {
+        Sinks.EmitResult resultado = sink.tryEmitNext(notificacion);
+        if (resultado != Sinks.EmitResult.OK) {
+            log.warn("[NOTIFY] Error al emitir '{}': {}", notificacion.getMensaje(), resultado);
+        }
     }
 }

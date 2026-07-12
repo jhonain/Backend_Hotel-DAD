@@ -23,7 +23,7 @@ public class HabitacionScheduler {
     private final HabitacionRepository habitacionRepository;
     private final NotificacionResolver notificacionResolver;
 
-    @Scheduled(fixedRate = 120000)
+    @Scheduled(fixedRate = 15000)
     @Transactional
     public void autoCheckin() {
         List<Reserva> pendientes = reservaRepository.findByEstadoAndCheckInBefore(
@@ -36,12 +36,15 @@ public class HabitacionScheduler {
             Habitacion h = r.getHabitacion();
             h.setEstado(EstadoHabitacion.OCUPADA);
 
+            reservaRepository.save(r);
+            habitacionRepository.save(h);
+
             notificacionResolver.emitiNotificacion(
                     "Check-in automático: Hab " + h.getNumero() + " - " + r.getHuesped().getNombre(), "RESERVAS");
         }
     }
 
-    @Scheduled(fixedRate = 300000)
+    @Scheduled(fixedRate = 15000)
     @Transactional
     public void autoCheckoutContinuo() {
         List<Reserva> vencidas = reservaRepository.findByEstadoAndCheckOutBefore(
@@ -54,15 +57,17 @@ public class HabitacionScheduler {
             h.setEstado(EstadoHabitacion.EN_LIMPIEZA);
             h.setLimpiezaInicio(LocalDateTime.now());
 
+            reservaRepository.save(r);
+            habitacionRepository.save(h);
+
             notificacionResolver.emitiNotificacion(
                     "Check-out automático: Hab " + h.getNumero(), "RESERVAS");
         }
     }
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 15000)
     @Transactional
     public void liberarHabitaciones() {
-        // Solo liberar limpieza automática antes de las 6 PM
         if (LocalDateTime.now().getHour() >= 18) return;
 
         List<Habitacion> enLimpieza = habitacionRepository.findByEstado(EstadoHabitacion.EN_LIMPIEZA);
@@ -72,6 +77,8 @@ public class HabitacionScheduler {
             if (h.getLimpiezaInicio() != null && h.getLimpiezaInicio().isBefore(limite)) {
                 h.setEstado(EstadoHabitacion.DISPONIBLE);
                 h.setLimpiezaInicio(null);
+
+                habitacionRepository.save(h);
 
                 notificacionResolver.emitiNotificacion(
                         "Hab " + h.getNumero() + " disponible", "HABITACIONES");
